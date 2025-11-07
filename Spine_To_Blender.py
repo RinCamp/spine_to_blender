@@ -1,11 +1,11 @@
 bl_info = {
-    "author": "RHS",
+    "author": "RinCamp",
     "name": "Spine_To_Blender",
-    "category": "RHS",
-    "blender": (3, 6, 0),
-    "version": (0, 0, 1),
+    "category": "Rin",
+    "blender": (4, 5, 0),
+    "version": (0, 0, 2),
     "doc_url": "",
-    "location": "3D View > N Panel > RHS",
+    "location": "3D View > N Panel > Spine",
     "description": "",
     "warning": "不支持动画导入, 仅适配Spine3.8.json的部分内容导入(骨骼/网格)",
     # "tracker_url": "",
@@ -240,7 +240,7 @@ class SPINE_PT_VIEW3D_DRAW(Panel):
     bl_idname = 'SPINE_PT_VIEW3D_DRAW'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'RHS'
+    bl_category = 'Spine'
     
     def draw(self,context):
         common_draw(self, context)
@@ -687,7 +687,6 @@ def create_material(material_name, image_filepath):
     material = bpy.data.materials.new(material_name)
     material.use_nodes = True
     material.blend_method = 'BLEND'
-    material.shadow_method = 'CLIP'
 
     for i in material.node_tree.nodes:
         material.node_tree.nodes.remove(i)
@@ -757,14 +756,14 @@ def _mesh_create_uv(ATLAS_DATA, uvs_list, attachment_name, mesh_obj):
         if uv_rotate == 90:
             x, y = y, x
             x += (uv_point_x + uv_offset_x - offset_x) / atlas_size[0]
-            y += 1 - ((uv_orig_x + uv_point_y - offset_y) / atlas_size[0])
+            y += 1 - ((uv_orig_x + uv_point_y - offset_y) / atlas_size[1])
         elif  uv_rotate == 270:
             x, y = y, x
             x += (uv_point_x + uv_offset_x - offset_x) / atlas_size[0]
-            y += 1 - ((uv_orig_x + uv_point_y - offset_y) / atlas_size[0])
+            y += 1 - ((uv_orig_x + uv_point_y - offset_y) / atlas_size[1])
         else:
             x += uv_point_x / atlas_size[0]
-            y += (uv_point_y + uv_offset_y) / atlas_size[0]
+            y += (uv_point_y + uv_offset_y) / atlas_size[1]
             y = 1 - y
         uv_data.append((x, y))  
         
