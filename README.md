@@ -1,12 +1,15 @@
 # spine-to-blender
 
 ### 使用
-- Spine Json 版本 : 3.8
-- Blender 版本 : 3.6+
+- Spine Json 版本 : 3.8.99
+- Blender 版本 : 4.5+
 
 - Blender偏好设置 > 插件 > 安装 [ Spine_To_Blender.py ]
 
 - 插件面板选择对应的文件目录 .json / .atlas / .png , 点击 [ 导入 ]
+- 如果导入uv仍有错误, 尝试在Spine中导出打包图集, 禁用"旋转"
+
+<img width="1178" height="577" alt="export" src="https://github.com/user-attachments/assets/a0ab87ab-e767-4737-82bd-f5eaed68c919" />
 
 ### 注意
 - 附件(Attachments)类型为"region", 并且使用的是解包图集的图片
