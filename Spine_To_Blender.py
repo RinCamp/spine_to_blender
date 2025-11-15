@@ -14,6 +14,7 @@ bl_info = {
 import bpy
 from bpy.props import *
 from bpy.types import PropertyGroup, Operator, Panel
+from bpy_extras.io_utils import ImportHelper
 
 import bmesh
 
@@ -28,6 +29,179 @@ from pathlib import Path
 # ----------- 
 
 def common_draw(self, context):
+    if bpy.context.preferences.view.language == 'zh_HANS':
+        common_draw_zh_cn(self, context)
+    else:
+        common_draw_en_us(self, context)
+
+
+def common_draw_en_us(self, context):
+    spine_setting = bpy.context.scene.RHS_SPINE
+
+    layout = self.layout
+    col = layout.column(align=True)
+    
+    box = col.box()
+    br = box.row()
+    br.scale_y = 1.2
+    br.prop(spine_setting, 'ui_type', expand=True)
+
+    if spine_setting.ui_type == 'import':
+        bc = box.column()
+        bc.scale_x = 1.2
+        bc.scale_y = 1.2
+        br = bc.row()
+        br.label(text='Select File', icon='DUPLICATE')
+        br.prop(spine_setting, 'show_file_name', text='', icon='CON_TRANSFORM_CACHE')
+        br = bc.row()
+        br.label(icon='BLANK1')
+        sp = br.split()
+
+        spc = sp.column(align=True)
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_json', text='', icon='EVENT_J')
+        cr.operator("rhs.select_json_file", text="", icon='FILEBROWSER')
+
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_atlas', text='', icon='EVENT_A')
+        cr.operator("rhs.select_atlas_file", text="", icon='FILEBROWSER')
+
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_image', text='', icon='IMAGE_PLANE')
+        cr.operator("rhs.select_png_file", text="", icon='FILEBROWSER')
+        
+        spc2 = spc.column(align=True)
+        _type = True if spine_setting.import_type == 'redive' else False
+        spc2.active = _type
+        spc2.prop(spine_setting, 'spine_image_atlas', text='', icon='RENDERLAYERS' if _type else 'X')
+
+        if spine_setting.show_file_name:
+            row = spc.row(align=True)
+            row.alignment = 'LEFT'
+            row.label(text='json')
+            row.label(text=spine_setting.spine_json.split('\\')[-1], icon='TRIA_RIGHT')
+            row = spc.row(align=True)
+            row.alignment = 'LEFT'
+            row.label(text='atlas')
+            row.label(text=spine_setting.spine_atlas.split('\\')[-1], icon='TRIA_RIGHT')
+            row = spc.row(align=True)
+            row.alignment = 'LEFT'
+            row.label(text='image', translate=False)
+            row.label(text=spine_setting.spine_image.split('\\')[-1], icon='TRIA_RIGHT')
+            row = spc.row(align=True)
+            row.alignment = 'LEFT'
+            row.label(text='dir', translate=False)
+            if Path(spine_setting.spine_image_atlas).exists():
+                row.label(text=Path(spine_setting.spine_image_atlas).name, icon='TRIA_RIGHT', translate=False)
+
+        box = col.box()
+        bc = box.column()
+        bc.scale_y = 1.2
+        bc.label(text='Import Config', icon='DUPLICATE')
+        bc = box.column()
+        bc.use_property_split = True
+        bc.use_property_decorate = False
+
+        bc.prop(spine_setting, 'spine_build_ik', text='IK', icon='CON_KINEMATIC')
+        bc.prop(spine_setting, 'spine_import_scale', text='Scale', slider=True)
+        bc.prop(spine_setting, 'character_name', text='Character')
+
+        box = col.box()
+        bc = box.column()
+        bc.use_property_split = True
+        bc.use_property_decorate = False
+        bc.scale_y = 1.2
+        bc.prop(spine_setting, 'import_version', text='Spine Version')
+        bc.prop(spine_setting, 'import_type', text='Type')
+        row = bc.row()
+        row.scale_y = 2
+        row.operator('rhs.spine_loader', text='Import', icon='IMPORT')
+
+    elif spine_setting.ui_type == 'layer':
+        bc = box.column()
+        bc.scale_x = 1.2
+        bc.scale_y = 1.2
+        bc.prop(spine_setting, 'armature', text='', icon='OUTLINER_OB_ARMATURE')
+        br = bc.row(align=True)
+        br.prop(spine_setting, 'replace_prefix', text='', icon='SHADERFX')
+        br.prop(spine_setting, 'search_filter', text='', icon='FILTER')
+
+        obj = bpy.data.objects.get(spine_setting.armature)
+
+        if not obj or obj and obj.type != 'ARMATURE':
+            box = col.box()
+            box.scale_y = 3
+            br = box.row()
+            br.alignment = 'CENTER'
+            br.alert = True
+            br.label(text='No armature set')
+        else:
+            child = []
+            for i in obj.children_recursive:
+                if spine_setting.hide_zero and i.location[1] == 0:
+                    continue
+                if spine_setting.hide_view:
+                    if i.hide_get() == True or i.hide_viewport == True:
+                        continue
+                if spine_setting.search_filter:
+                    if spine_setting.search_filter.lower() not in i.name.replace(spine_setting.replace_prefix, '', 1).lower():
+                        continue
+                child.append(i)
+
+            box = col.box()
+            br = box.row()
+            br.scale_x = 1.2
+            br.scale_y = 1.2
+            br.prop(spine_setting, 'hide_view',text='', icon='FILE_3D')
+            br.prop(spine_setting, 'hide_zero',text='', icon='DECORATE')
+            br.prop(spine_setting, 'page_limit',text='Limit')
+
+            box = col.box()
+            bc = box.column()
+            bc.scale_x = 1.2
+            bc.scale_y = 1.2
+            act_obj = bpy.context.object
+            if act_obj and act_obj in child:
+                br = bc.row()
+                sp = br.split()
+                spr = sp.row(align=True)
+                spr.label(icon='SHADING_BBOX')
+                spr.label(text=act_obj.name.replace(spine_setting.replace_prefix, '', 1))
+                spr.prop(act_obj, 'location', index=1, text='')
+                spr.separator()
+                spr.operator("rhs.spine_object_hide", text="", icon='HIDE_ON' if act_obj.hide_get() else 'HIDE_OFF').obj_name=act_obj.name
+                spr.prop(act_obj, 'hide_viewport', text='', toggle=True)
+                spr.prop(act_obj, 'hide_render', text='', toggle=True)
+            else:
+                br = bc.row()
+                br.alignment = 'CENTER'
+                br.alert = True
+                br.label(text='活动物体不属于骨架子集')
+                
+            box = col.box()
+            bc = box.column()
+            bc.scale_x = 1.2
+            bc.scale_y = 1.2
+            for e, mesh in enumerate(sorted(child, key=lambda x:x.location[1])):
+                if e == spine_setting.page_limit:
+                    break
+                br = bc.row()
+                sp = br.split()
+                spr = sp.row(align=True)
+                spr.active = True if mesh.hide_get() == False and mesh.hide_viewport == False else False
+                spr.operator('rhs.spine_object_select', text='', 
+                            icon='RESTRICT_SELECT_OFF' if bpy.context.object == mesh else 'RESTRICT_SELECT_ON',
+                            emboss=0).obj_name=mesh.name
+                spr.label(text=mesh.name.replace(spine_setting.replace_prefix, '', 1))
+                spr.prop(mesh, 'location', index=1, text='')
+                
+                spr.separator()
+                spr.operator("rhs.spine_object_hide", text="", icon='HIDE_ON' if mesh.hide_get() else 'HIDE_OFF').obj_name=mesh.name
+                spr.prop(mesh, 'hide_viewport', text='', toggle=True)
+                spr.prop(mesh, 'hide_render', text='', toggle=True)
+
+      
+def common_draw_zh_cn(self, context):
     spine_setting = bpy.context.scene.RHS_SPINE
 
     layout = self.layout
@@ -50,9 +224,17 @@ def common_draw(self, context):
         sp = br.split()
         spc = sp.column(align=True)
 
-        spc.prop(spine_setting, 'spine_json', text='', icon='EVENT_J')
-        spc.prop(spine_setting, 'spine_atlas', text='', icon='EVENT_A')
-        spc.prop(spine_setting, 'spine_image', text='', icon='IMAGE_PLANE')
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_json', text='', icon='EVENT_J')
+        cr.operator("rhs.select_json_file", text="", icon='FILEBROWSER')
+
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_atlas', text='', icon='EVENT_A')
+        cr.operator("rhs.select_atlas_file", text="", icon='FILEBROWSER')
+
+        cr = spc.row(align=True)
+        cr.prop(spine_setting, 'spine_image', text='', icon='IMAGE_PLANE')
+        cr.operator("rhs.select_png_file", text="", icon='FILEBROWSER')
         
         spc2 = spc.column(align=True)
         _type = True if spine_setting.import_type == 'redive' else False
@@ -153,7 +335,8 @@ def common_draw(self, context):
                 spr.label(text=act_obj.name.replace(spine_setting.replace_prefix, '', 1))
                 spr.prop(act_obj, 'location', index=1, text='')
                 spr.separator()
-                spr.prop(act_obj, 'hide', text='', toggle=True, icon='HIDE_ON' if act_obj.hide else 'HIDE_OFF')
+
+                spr.operator("rhs.spine_object_hide", text="", icon='HIDE_ON' if act_obj.hide_get() else 'HIDE_OFF').obj_name=act_obj.name
                 spr.prop(act_obj, 'hide_viewport', text='', toggle=True)
                 spr.prop(act_obj, 'hide_render', text='', toggle=True)
             else:
@@ -166,6 +349,7 @@ def common_draw(self, context):
             bc = box.column()
             bc.scale_x = 1.2
             bc.scale_y = 1.2
+            
             for e, mesh in enumerate(sorted(child, key=lambda x:x.location[1])):
                 if e == spine_setting.page_limit:
                     break
@@ -180,7 +364,8 @@ def common_draw(self, context):
                 spr.prop(mesh, 'location', index=1, text='')
                 
                 spr.separator()
-                spr.prop(mesh, 'hide', text='', toggle=True, icon='HIDE_ON' if mesh.hide else 'HIDE_OFF')
+                spr.operator("rhs.spine_object_hide", text="", icon='HIDE_ON' if mesh.hide_get() else 'HIDE_OFF').obj_name=mesh.name
+            
                 spr.prop(mesh, 'hide_viewport', text='', toggle=True)
                 spr.prop(mesh, 'hide_render', text='', toggle=True)
 
@@ -206,10 +391,10 @@ class Scene_Spine(PropertyGroup):
                 ],
         )
     
-    spine_json : StringProperty(name='', description='json文件路径', subtype='FILE_PATH', update=get_abs_path('spine_json'))
-    spine_atlas : StringProperty(name='', description='atlas文件路径', subtype='FILE_PATH', update=get_abs_path('spine_atlas'))
-    spine_image : StringProperty(name='', description='image文件路径', subtype='FILE_PATH', update=get_abs_path('spine_image'))
-    spine_image_atlas : StringProperty(name='', description='图集文件夹', subtype='DIR_PATH', update=get_abs_path('spine_image_atlas'))
+    spine_json : StringProperty(name='', description='json文件路径', update=get_abs_path('spine_json'))
+    spine_atlas : StringProperty(name='', description='atlas文件路径', update=get_abs_path('spine_atlas'))
+    spine_image : StringProperty(name='', description='image文件路径', update=get_abs_path('spine_image'))
+    spine_image_atlas : StringProperty(name='', description='图集文件夹', update=get_abs_path('spine_image_atlas'))
 
     spine_import_scale : FloatProperty(default=0.01, min=0.01, max=1)
     spine_build_ik : BoolProperty(default=True)
@@ -217,8 +402,8 @@ class Scene_Spine(PropertyGroup):
     ui_type : EnumProperty(
         default = 'import',
         items = [
-                ('import', '导入', '', 'OPTIONS', 0),
-                ('layer', '层级', '', 'RENDERLAYERS', 1),
+                ('import', 'Import', '', 'OPTIONS', 0),
+                ('layer', 'Mesh', '', 'RENDERLAYERS', 1),
                 ],
         )
     
@@ -226,13 +411,13 @@ class Scene_Spine(PropertyGroup):
     character_name : StringProperty(default='default')
 
     armature : StringProperty(search=lambda self, context, edit_text: [i.name for i in bpy.context.scene.objects if i.type == 'ARMATURE'])
-    replace_prefix : StringProperty(name='', description='替换列表前缀', default='default_')
+    replace_prefix : StringProperty(name='', description='Replace list prefix\n替换列表前缀', default='default_')
     page : IntProperty(min=1)
-    page_limit : IntProperty(name='', description='列表数量, -1无限', default=-1, min=-1, max=1000)
-    search_filter : StringProperty(name='检索关键字')
+    page_limit : IntProperty(name='', description='Limit\n列表数量, -1 is not restricted.', default=-1, min=-1, max=1000)
+    search_filter : StringProperty(name='Search keywords\n检索关键字')
     
-    hide_zero : BoolProperty(name='', description='列表过滤处于0坐标的物体')
-    hide_view : BoolProperty(name='', description='列表过滤不可视的物体')
+    hide_zero : BoolProperty(name='', description='Filter objects with Y-axis value of 0\n列表过滤处于0坐标的物体')
+    hide_view : BoolProperty(name='', description='Filter out invisible objects\n列表过滤不可视的物体')
     
 
 class SPINE_PT_VIEW3D_DRAW(Panel):
@@ -273,13 +458,27 @@ class Spine_Loader(Operator):
         BONE_MATRIX_DICT = _get_bone_matrix_dict(arm_obj)
 
         _import_mesh(spine_setting, arm_obj, BONES_DICT, SLOTS_DICT, ATTACHMENTS_DCIT, BONE_MATRIX_DICT, ATLAS_DATA)
-
-        _build_ik(JSON_DATA, arm_obj)
+        
+        if spine_setting.spine_build_ik:
+            _build_ik(JSON_DATA, arm_obj)
 
         end = time.perf_counter()
         self.report({'INFO'}, "Load Spine: " + str(round(end - start,4)) + "s")
         return {'FINISHED'}
 
+class Select_Object_Hide(Operator):
+    bl_idname = "rhs.spine_object_hide"  
+    bl_label = ''
+    bl_description = ''
+    
+    obj_name : StringProperty()
+
+    def execute(self, context):
+        obj = bpy.data.objects.get(self.obj_name)
+        if obj:
+            print(obj)
+            obj.hide_set(not obj.hide_get())
+        return {'FINISHED'}
 
 class Select_Object_Select(Operator):
     bl_idname = "rhs.spine_object_select"  
@@ -1054,6 +1253,66 @@ def get_vertices_list(_vertices, scale=1, _list=[]):
         return get_vertices_list(_vertices, scale=scale, _list=_list)
     return _list
 
+
+class OT_select_json_file(Operator, ImportHelper):
+    bl_idname = "rhs.select_json_file"
+    bl_label = "Select Json File"
+    
+    filter_glob: bpy.props.StringProperty(default="*.json")
+    
+    filename_ext = ".json"
+    
+    filepath: bpy.props.StringProperty(
+        name="文件路径",
+        description="选择Spine文件",
+        subtype='FILE_PATH'
+    )
+    
+    def execute(self, context):
+        spine_setting = bpy.context.scene.RHS_SPINE
+        spine_setting.spine_json = self.filepath
+        return {'FINISHED'}
+    
+
+class OT_select_atlas_file(Operator, ImportHelper):
+    bl_idname = "rhs.select_atlas_file"
+    bl_label = "Select Atlas File"
+    
+    filter_glob: bpy.props.StringProperty(default="*.atlas")
+    
+    filename_ext = ".atlas"
+    
+    filepath: bpy.props.StringProperty(
+        name="文件路径",
+        description="选择Spine文件",
+        subtype='FILE_PATH'
+    )
+    
+    def execute(self, context):
+        spine_setting = bpy.context.scene.RHS_SPINE
+        spine_setting.spine_atlas = self.filepath
+        return {'FINISHED'}
+
+
+class OT_select_png_file(Operator, ImportHelper):
+    bl_idname = "rhs.select_png_file"
+    bl_label = "Select Png File"
+    
+    filter_glob: bpy.props.StringProperty(default="*.png")
+    
+    filename_ext = ".png"
+    
+    filepath: bpy.props.StringProperty(
+        name="文件路径",
+        description="选择Spine文件",
+        subtype='FILE_PATH'
+    )
+    
+    def execute(self, context):
+        spine_setting = bpy.context.scene.RHS_SPINE
+        spine_setting.spine_image = self.filepath
+        return {'FINISHED'}
+    
 # ----------- 
 # REGISTER
 # ----------- 
@@ -1061,8 +1320,15 @@ def get_vertices_list(_vertices, scale=1, _list=[]):
 classes = [
     Scene_Spine,
     Spine_Loader,
+
     Select_Object_Select,
+    Select_Object_Hide,
+
     SPINE_PT_VIEW3D_DRAW,
+
+    OT_select_json_file,
+    OT_select_atlas_file,
+    OT_select_png_file,
 ]
 
 
