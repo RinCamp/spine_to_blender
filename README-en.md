@@ -1,46 +1,62 @@
-# spine-to-blender
-- [中文](README.md)
-- [English](README-en.md) ! Using Translate
+# # spine-to-blender
+## README  
 
+[中文](README.md) | [English (Using Translate)](README-en.md) 
 
-### Installation
-- Blender > Preferences > Add-ons > Install form disk > [ Spine_To_Blender.py ]
+## Install
 
-### How to use
-- Blender Version : 4.5+
-- Exporting JSON using Spine version 3.8.99
-- Find [Spine] in N-Panel
-- Select the path to the json/atlas/png file exported by Spine. (Automatic filtering when selecting files)
-- If you have multiple skins, you may need to manually enter the character name.
+(Recommended) Download the source code as a ZIP file directly | Select and download the file from Releases.
 
-If there are errors importing UVs, try exporting the packaged atlas in Spine and disabling "Rotation".
-<img width="1828" height="574" alt="exp" src="https://github.com/user-attachments/assets/21e90f0e-c026-4293-98fa-c68299a3b02d" />
+- Blender > Preferences > Add-ons > Install form disk > [spine-to-blender-main.zip]  
 
+## Import
 
-### Note
-- The attachment type is "region", and the images used are from the unpacked atlas
-Then select the atlas folder and import it using the <Re:Dive> type
+Blender Version: 5.0+ | Spine Version: 3.8 / 4.2  
 
-- About: spine-json-format: http://esotericsoftware.com/spine-json-format
+1.Select the path to the [json / atlas / png] file exported by Spine
 
+2.If you have multiple skins, you may need to manually enter the character name.
 
-### The plugin only imports armature and meshes.
+3.Set the name of the imported character.
 
-![mesh](https://github.com/RinAnime/spine-to-blender/assets/108602268/0a46ac6c-cf77-49ae-8962-3db1c931b9d9)
+4.Click [ Import Spine ]   
 
-### Arknights > Blender
+## Notice
 
-![arknight](https://github.com/RinAnime/spine-to-blender/assets/108602268/7185d182-18c1-41ef-ac0e-9c9f9b9ca140)
+This plugin can usually only handle relatively simple projects and only imports skeletons and meshes.
 
-### Re:Dive > Blender
+If all types are "region" (Skin attachments -> the mesh uses only 1 face/4 vertices)
 
-![redive](https://github.com/RinAnime/spine-to-blender/assets/108602268/bb91e71b-c6a6-46d8-8da6-aaa0d7bf204a)
+Select the atlas folder and import using the <Re:Dive> type.
 
-### Azur Lane > Blender
+## Using Slots
 
-<img width="1274" height="569" alt="azu" src="https://github.com/user-attachments/assets/68d1cdca-b200-46f2-b78a-96553ab7e1b0" />
+1. The button to the left of "[Import Spine]" on the import interface can be used to import slot data.
 
-### Layer (obj.Location[1])
+2. The button to the right of "[Slot List]" on the slot interface can also open the hidden simplified import interface.
 
-![layer](https://github.com/RinAnime/spine-to-blender/assets/108602268/3742ed7e-0d16-486e-bbee-b7c45741bc4f)
+3. Select the target skeleton and enter the corresponding character name to obtain the bones/meshes from the slot data.
+
+4. You can click the cursor to the left of the name to select the bone/mesh.
+
+5. (You can quickly find relevant content using the mesh name: "Character Name - Slot - Attachment")
+
+## About: spine-json-format
+
+http://esotericsoftware.com/spine-json-format
+
+## Known Issues
+
+Skeletons using path constraints cannot be imported correctly.
+
+When installing other versions, Blender needs to be restarted after uninstalling the plugin 
+
+(restarting is not necessary when simply enabling or disabling the plugin).
+
+When switching Blender's language, the plugin needs to be restarted for some UI translations to update correctly.
+
+## Interface Preview
+
+<img width="1601" height="1256" alt="info_en_us" src="https://github.com/user-attachments/assets/8acd58e7-bc0e-426d-816c-c10b9721dad0" />
+
 
