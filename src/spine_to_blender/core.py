@@ -71,7 +71,7 @@ class Scene_Spine(Camp_Scene):
 
             cls.armature = StringProperty(search=lambda self, context, edit_text: [i.name for i in bpy.context.scene.objects if i.type == "ARMATURE"])
             cls.character_name = StringProperty(default="character")
-            cls.y_sort_scale = IntProperty(default=1, min=1, max=20)
+            cls.y_sort_scale = IntProperty(default=5, min=1, max=20)
             cls.show_import_slots_menu = BoolProperty(default=False)
         else:
             cls.menu_types = EnumProperty(
