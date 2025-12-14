@@ -29,7 +29,10 @@ class OPS_Import_Spine(Operator):
     def execute(self, context):
         spine_setting = get_context_scene_cmd().spine
         if not spine_setting.json_path or not spine_setting.atlas_path:
-            self.report({"WARNING"}, "文件错误")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "读取文件错误")
+            else:
+                self.report({"WARNING"}, "Error reading file.")
             return {"FINISHED"}
 
         start = time.perf_counter()
@@ -38,7 +41,10 @@ class OPS_Import_Spine(Operator):
         ATLAS_DATA = load_spine_atlas(spine_setting.atlas_path)
 
         if not JSON_DATA or not ATLAS_DATA:
-            self.report({"WARNING"}, "文件错误")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "读取文件错误")
+            else:
+                self.report({"WARNING"}, "Error reading file.")
             return {"FINISHED"}
 
         BONES_DICT = load_bones(JSON_DATA)
@@ -161,11 +167,17 @@ class OPS_Select_Object(Operator):
         obj = bpy.data.objects.get(self.obj_name)
 
         if not obj:
-            self.report({"WARNING"}, "未找到目标")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "未找到目标")
+            else:
+                self.report({"WARNING"}, "Target not found.")
             return {"FINISHED"}
 
         if obj.hide_get() or obj.hide_viewport:
-            self.report({"WARNING"}, "目标已隐藏")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "目标不可视")
+            else:
+                self.report({"WARNING"}, "The target is hidden.")
             return {"FINISHED"}
 
         bpy.context.view_layer.objects.active = obj
@@ -187,16 +199,25 @@ class OPS_Select_Pose_Bone(Operator):
         obj = bpy.data.objects.get(self.obj_name)
 
         if not obj or obj.type != "ARMATURE":
-            self.report({"WARNING"}, "未找到目标 / 目标不是骨架")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "未找到目标 / 目标不是骨架")
+            else:
+                self.report({"WARNING"}, "Target not found / The target is not a skeleton.")
             return {"FINISHED"}
 
         if obj.hide_get() or obj.hide_viewport:
-            self.report({"WARNING"}, "目标已隐藏")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "目标不可视")
+            else:
+                self.report({"WARNING"}, "The target is hidden.")
             return {"FINISHED"}
 
         pb = obj.pose.bones.get(self.bone_name)
         if not pb:
-            self.report({"WARNING"}, "未找到目标骨骼")
+            if bpy.context.preferences.view.language == "zh_HANS":
+                self.report({"WARNING"}, "未找到目标")
+            else:
+                self.report({"WARNING"}, "Target not found.")
             return {"FINISHED"}
 
         bpy.context.view_layer.objects.active = obj
