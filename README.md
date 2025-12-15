@@ -1,4 +1,7 @@
 # # spine-to-blender
+
+![Anim](https://github.com/user-attachments/assets/756d70ff-3dc2-42c7-b20b-289163666614)
+
 ## README  
 
 [中文](README.md) | [English (Using Translate)](README-en.md) 
@@ -40,6 +43,17 @@ Blender版本: 5.0+ | Spine版本: 3.8 / 4.2
 4.可以点击名称左侧的光标进行选择该骨骼/网格  
 
 5.(可以通过网格的名称快速查找相关内容 "角色名-插槽-附件")  
+
+## 导入动画 (仅支持Blender4.4后的版本)
+
+目前仅支持导入位置/缩放/旋转的关键帧
+
+只导入动作本身, 可使用非线性动画, 选择动作与插槽
+
+关于Blender4.4版本的动画系统说明
+
+https://docs.blender.org/manual/en/4.4/animation/actions.html
+
 
 ## 关于Spine导出Json格式
 
